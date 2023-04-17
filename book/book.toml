@@ -1,0 +1,10 @@
+[book]
+authors = ["phaer"]
+language = "en"
+multilingual = false
+src = "src"
+title = "mdbook-nix"
+
+[preprocessor.mdbook-nix]
+renderers = ["html"]
+command = "./target/debug/mdbook-nix preprocess"
