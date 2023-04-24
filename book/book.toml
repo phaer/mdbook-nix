@@ -5,6 +5,9 @@ multilingual = false
 src = "src"
 title = "mdbook-nix"
 
+[output.html]
+additional-js = [ "theme/highlight-nix.js" ]
+
 [preprocessor.mdbook-nix]
 renderers = ["html"]
 command = "./target/debug/mdbook-nix preprocess"
