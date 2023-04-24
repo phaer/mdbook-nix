@@ -22,10 +22,10 @@ to the new one, using [insta.rs][insta], to ensure everything still works.
 - Snapshotting isn't implemented yet, just basic evaluation with one repl
   per chapter.
 - Currently depends on wip rexpect PR at https://github.com/rust-cli/rexpect/pull/103.
-- Doesn't end the build on errors yet, but prints error inside the book.
 - Make sessions configurable via `CodeBlockInfo.attributes`.
 - Add bash support.
 - Publish example book on Github pages.
+- ~~Doesn't end the build on errors yet, but prints error inside the book.~~
 
 
 

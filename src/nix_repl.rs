@@ -2,7 +2,7 @@ use std::process::Command;
 
 use rexpect::spawn_with_options;
 use rexpect::session::{PtyReplSession, Options};
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 
 pub struct Repl {
@@ -38,6 +38,11 @@ impl Repl {
         }
         let (_, result) = self.session.exp_regex(r"\n.*")?;
         self.session.wait_for_prompt()?;
-        Ok(result.trim().to_string())
+        let result = result.trim();
+        if result.starts_with("error:") {
+            Err(anyhow!("nix repl {}", result))
+        } else {
+            Ok(result.to_string())
+        }
     }
 }
