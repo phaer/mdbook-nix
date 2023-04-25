@@ -186,17 +186,17 @@ impl Preprocessor for Nix {
 mod test {
     use super::*;
     use serde_json::json;
+    use std::matches;
 
     #[test]
     fn nix_preprocessor_run() {
         let input_chapter_1 = r##"
-            # mdbook-nix
+# mdbook-nix
 
-            ```nix
-            1 + 2
-            ```
-
-        "##;
+```nix
+1 + 2
+```
+"##;
 
         let input_json = json!([
             {
@@ -238,5 +238,11 @@ mod test {
         let (ctx, book) = mdbook::preprocess::CmdPreprocessor::parse_input(input_json.as_bytes()).unwrap();
         let result = Nix::new().run(&ctx, book);
         assert!(result.is_ok());
+        let first = &result.unwrap().sections[0];
+        assert!(matches!(first, BookItem::Chapter(_)));
+        if let BookItem::Chapter(chapter) = first {
+            assert!(chapter.content.contains("result\n3"));
+        }
+
     }
 }
