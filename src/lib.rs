@@ -1,7 +1,8 @@
-use std::collections::HashMap;
 mod nix_repl;
 
-use mdbook::book::{Book, BookItem, Chapter};
+use std::collections::HashMap;
+use std::fmt::Display;
+use mdbook::book::{Book, BookItem};
 use mdbook::errors::Error;
 use mdbook::preprocess::{Preprocessor, PreprocessorContext};
 use pulldown_cmark::{Event, Parser, Tag, CodeBlockKind};
@@ -18,6 +19,28 @@ impl Nix {
     }
 }
 
+
+#[derive(Debug)]
+pub struct PreprocessErrors {
+    message: String,
+    errors: Vec<anyhow::Error>,
+}
+
+impl Display for PreprocessErrors {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Err(res) = write!(f, "{}", self.message) {
+            return Err(res)
+        }
+        for error in self.errors.iter() {
+            if let Err(res) = write!(f, "{}", error) {
+                return Err(res)
+            }
+        }
+        return Ok(())
+    }
+}
+
+impl std::error::Error for PreprocessErrors {}
 
 
 #[derive(Debug, Clone)]
@@ -67,9 +90,9 @@ impl fmt::Display for CodeBlockInfo {
 }
 
 fn eval_nix_blocks(
-    chapter: &Chapter,
+    input: &str
 ) -> Result<String> {
-    let mut buf = String::with_capacity(chapter.content.len());
+    let mut buf = String::with_capacity(input.len());
 
     let mut repl = nix_repl::Repl::new()?;
 
@@ -77,7 +100,7 @@ fn eval_nix_blocks(
     let mut block_counter = 0;
     let mut block: Option<CodeBlockInfo> = None;
 
-    for event in Parser::new(&chapter.content).into_iter() {
+    for event in Parser::new(input).into_iter() {
         let mut new = match event.clone() {
             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(s))) if s.starts_with("nix") => {
                 block_counter += 1;
@@ -130,18 +153,28 @@ impl Preprocessor for Nix {
             }
         }
 
+        let mut errors = vec![];
         book.for_each_mut(|item| {
             match item {
                 BookItem::Chapter(chapter) => {
-                    chapter.content = eval_nix_blocks(&chapter).unwrap();
+                    match eval_nix_blocks(&chapter.content) {
+                        Ok(result) => chapter.content = result,
+                        Err(e) => errors.push(e),
+                    }
                 },
                 BookItem::Separator => (),
                 BookItem::PartTitle(_) => (),
-
             }
         });
 
-        Ok(book)
+        if errors.len() == 0 {
+            Ok(book)
+        } else {
+            Err(anyhow!(PreprocessErrors {
+                message: format!("While pre-processing {:#?}", ctx.config.get("book.title")),
+                errors
+            }))
+        }
     }
 
     fn supports_renderer(&self, renderer: &str) -> bool {
