@@ -1,0 +1,5 @@
+---
+source: src/lib.rs
+expression: result.to_string()
+---
+"mdbook-nix helps you to keep your docs up to date"

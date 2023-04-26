@@ -5,10 +5,11 @@ use std::fmt::Display;
 use mdbook::book::{Book, BookItem};
 use mdbook::errors::Error;
 use mdbook::preprocess::{Preprocessor, PreprocessorContext};
-use pulldown_cmark::{Event, Parser, Tag, CodeBlockKind};
+use pulldown_cmark::{Event, Parser, Tag, CodeBlockKind, CowStr};
 use pulldown_cmark_to_cmark::cmark;
 use anyhow::{Result, anyhow};
 use std::fmt;
+use insta;
 
 
 pub struct Nix;
@@ -44,13 +45,13 @@ impl std::error::Error for PreprocessErrors {}
 
 
 #[derive(Debug, Clone)]
-struct CodeBlockInfo {
-    language: String,
-    attributes: HashMap<String, String>
+pub struct CodeBlockInfo {
+    pub language: String,
+    pub attributes: HashMap<String, String>
 }
 
 impl CodeBlockInfo {
-    fn new(input: &str, count: u32) -> Option<Self> {
+    pub fn new(input: &str, count: u32) -> Option<Self> {
         if input.is_empty() {
             None
         } else {
@@ -72,6 +73,10 @@ impl CodeBlockInfo {
             }
             Some(CodeBlockInfo {language, attributes})
       }
+    }
+
+    pub fn name(&self) -> String {
+        self.attributes.get("name").unwrap().to_string()
     }
 }
 
@@ -116,11 +121,13 @@ fn eval_nix_blocks(
             Event::Text(s) => {
                 if let Some(block) = block.clone() {
                     eprintln!("{:#?}, {}", block, block.to_string());
+                    let result: CowStr = repl.eval(&s)?.into();
+                    insta::assert_snapshot!(block.name(), result.to_string());
                     vec![
                         Event::Text(s.clone()),
                         Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(block.to_string().into()))),
                         Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced("result".into()))),
-                        Event::Text(repl.eval(&s)?.into()),
+                        Event::Text(result),
                         Event::End(Tag::CodeBlock(CodeBlockKind::Fenced("result".into()))),
                     ]
                 } else {

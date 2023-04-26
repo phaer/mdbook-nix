@@ -19,14 +19,20 @@ to the new one, using [insta.rs][insta], to ensure everything still works.
 
 # TODOS
 
-- Snapshotting isn't implemented yet, just basic evaluation with one repl
-  per chapter.
+- Snapshotting isn't ~~implemented~~ polished yet, we don't provide a cli yet.
+  Use with `[INSTA_UPDATE](insta-update)` set to `always` on first run and `new` on subsequent
+  rus. Also set `INSTA_OUTPUT` to `none` as that would break JSON output.
+  Use `cargo insta review` to accept or reject new snapshots.
 - Currently depends on wip rexpect PR at https://github.com/rust-cli/rexpect/pull/103.
 - Make sessions configurable via `CodeBlockInfo.attributes`.
 - Add bash support.
 - Publish example book on Github pages.
 - ~~Doesn't end the build on errors yet, but prints error inside the book.~~
 
+# Inspiration
+
+* [tesh](https://github.com/OceanSprint/tesh)
+* [termbook](https://github.com/Byron/termbook)
 
 
 [mdbook]: https://rust-lang.github.io/mdBook/
@@ -35,3 +41,4 @@ to the new one, using [insta.rs][insta], to ensure everything still works.
 [gfm]: https://github.github.com/gfm/#what-is-github-flavored-markdown-
 [gfm-info-string]: https://github.github.com/gfm/#info-string
 [insta]: https://insta.rs/
+[insta-update]: https://insta.rs/docs/advanced/#controlling-snapshot-updating
